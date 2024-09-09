@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 2.8.12)
+# cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.16)
 project(CPFA-ARGoS)
 
 # For verbose output
@@ -28,10 +29,9 @@ execute_process(
 add_definitions("-DGIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"")
 add_definitions("-DGIT_BRANCH=\"${GIT_BRANCH}\"")
 
-# Use C+11
-if (NOT APPLE)
-set(CMAKE_CXX_FLAGS "-std=c++0x")
-endif()
+# Use C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Deactivate RPATH for MacOSX.
 if (APPLE)
@@ -42,28 +42,27 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 # Find the ARGoS package.
-find_package(PkgConfig)
-pkg_check_modules(ARGOS REQUIRED argos3_simulator)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ARGOS_PREFIX}/share/argos3/cmake)
+find_package(ARGoS REQUIRED)
+include_directories(${CMAKE_SOURCE_DIR} ${ARGOS_INCLUDE_DIRS})
+link_directories(${ARGOS_LIBRARY_DIR})
+link_libraries(${ARGOS_LDFLAGS})
 
 # Check for required libraries to compile code depending on Qt and OpenGL.
-include(ARGoSCheckQTOpenGL)
+# include(ARGoSCheckQTOpenGL)
 
-# Find the ARGoS package
-find_package(PkgConfig)
-pkg_check_modules(ARGOS REQUIRED argos3_simulator)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ARGOS_PREFIX}/share/argos3/cmake)
+# Find OpenGL and GLUT
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS})
 
-# Find the GSL package.
-# find_package(GSL REQUIRED)
+# Set OpenGL preference to GLVND to avoid legacy warning
+set(OpenGL_GL_PREFERENCE GLVND)
 
 # Find the LUA package.
-find_package(Lua52 REQUIRED)
+find_package(Lua REQUIRED)
 
 # Set ARGoS include directory.
-#include_directories(${CMAKE_SOURCE_DIR} ${ARGOS_INCLUDE_DIRS} ${GSL_INCLUDE_DIR} ${LUA_INCLUDE_DIR} source)
 include_directories(${CMAKE_SOURCE_DIR} ${ARGOS_INCLUDE_DIRS} ${LUA_INCLUDE_DIR} source)
-
 link_directories(${ARGOS_LIBRARY_DIRS} build)
 
 # Descend into the source code directory and build the CPFA libraries. This is all that's needed to run experiments.
